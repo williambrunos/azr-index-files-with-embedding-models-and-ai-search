@@ -6,7 +6,9 @@ from langchain.text_splitter import TokenTextSplitter
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import os
-from src.utils.azuresearchclient import AzureSearchClient
+from langchain.vectorstores.azuresearch import AzureSearch
+
+# from src.utils.azuresearchclient import AzureSearchClient
 
 load_dotenv()
 
@@ -30,21 +32,18 @@ embeddings = OpenAIEmbeddings(
 )
 
 print(os.environ['AZURE_AI_SEARCH_INDEX_NAME'])
+print(os.environ['AZURE_AI_SEARCH_ENDPOINT'])
 
-azure_search_client = AzureSearchClient(
+azure_ai_search = AzureSearch(
     azure_search_endpoint=os.environ['AZURE_AI_SEARCH_ENDPOINT'],
     azure_search_key=os.environ['AZURE_AI_SEARCH_KEY'],
     index_name=os.environ['AZURE_AI_SEARCH_INDEX_NAME'],
     embedding_function=embeddings.embed_query
 )
-print(azure_search_client.index_name)
-azure_ai_search = azure_search_client._get_client()
 
 loader_kwargs = {'autodetect_encoding': True}
 loader = DirectoryLoader('../data/', glob='*.txt', loader_cls=TextLoader, loader_kwargs=loader_kwargs)
 
 documents = loader.load()
-text_splitter = TokenTextSplitter(chunk_size=1, chunk_overlap=0)
-docs = text_splitter.split_documents(documents)
 
-azure_ai_search.add_documents(docs)
+azure_ai_search.add_documents(documents=documents)
